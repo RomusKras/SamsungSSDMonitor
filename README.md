@@ -1,6 +1,25 @@
-# SSDMonitor
+<div align="center">
+
+# 🧊 SSDMonitor
+
+### SMART-телеметрия Samsung NVMe прямо в строке меню macOS
+
+[![macOS](https://img.shields.io/badge/macOS-13%2B-000000?style=for-the-badge&logo=apple&logoColor=white)](#требования)
+[![Swift](https://img.shields.io/badge/Swift-Toolchain-F05138?style=for-the-badge&logo=swift&logoColor=white)](#сборка-и-запуск)
+[![Thunderbolt](https://img.shields.io/badge/Thunderbolt%2FUSB4-40%20Гбит%2Fс-0A84FF?style=for-the-badge&logo=usb&logoColor=white)](#почему-это-вообще-работает)
+[![smartmontools](https://img.shields.io/badge/smartctl-без%20sudo-2ECC71?style=for-the-badge)](#требования)
+
+<br>
+
+<img src="docs/screenshot.png" width="380" alt="Выпадающее меню SSDMonitor в строке меню macOS с показателями Samsung SSD 9100 PRO">
+
+</div>
+
+<br>
 
 Виджет в строке меню macOS для мониторинга Samsung SSD 9100 PRO (или любого другого NVMe-накопителя), подключённого через **Thunderbolt/USB4-кейс**. Показывает температуру, износ, TBW и остальную SMART-телеметрию — то, что не даёт увидеть Samsung Magician (у него вообще нет версии под macOS, а Windows-версия не видит диски за USB/TB-мостами).
+
+---
 
 ## Почему это вообще работает
 
