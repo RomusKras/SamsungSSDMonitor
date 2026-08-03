@@ -22,9 +22,6 @@
 
 A macOS menu bar widget for monitoring a Samsung SSD 9100 PRO (or any other NVMe drive) connected through a **Thunderbolt/USB4 enclosure**. It shows temperature, wear, TBW and the rest of the SMART telemetry — the things Samsung Magician won't give you, since it has no macOS build at all and the Windows one can't see drives behind USB/TB bridges.
 
-> [!NOTE]
-> The interface follows your system language: Russian if that's your preferred macOS language, English for everyone else. See [Interface language](#interface-language).
-
 ---
 
 ## Why this works at all
