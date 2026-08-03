@@ -22,6 +22,9 @@
 
 Виджет в строке меню macOS для мониторинга Samsung SSD 9100 PRO (или любого другого NVMe-накопителя), подключённого через **Thunderbolt/USB4-кейс**. Показывает температуру, износ, TBW и остальную SMART-телеметрию — то, что не даёт увидеть Samsung Magician (у него вообще нет версии под macOS, а Windows-версия не видит диски за USB/TB-мостами).
 
+> [!NOTE]
+> Интерфейс подстраивается под язык системы: русский, если он основной в macOS, английский во всех остальных случаях. Подробнее — [Язык интерфейса](#язык-интерфейса).
+
 ---
 
 ## Почему это вообще работает
@@ -117,7 +120,7 @@ launchctl bootout gui/$(id -u)/com.romankrasovskij.ssdmonitor
 ### Обновление кода — стандартный цикл
 
 ```bash
-# отредактировать Sources/SSDMonitor/main.swift
+# отредактировать Sources/SSDMonitor/main.swift (или Localization.swift — тексты)
 swift build -c release
 launchctl kickstart -k gui/$(id -u)/com.romankrasovskij.ssdmonitor
 ```
@@ -139,6 +142,12 @@ defaults read SSDMonitor refreshInterval
 # сбросить на дефолт (30 сек)
 defaults delete SSDMonitor refreshInterval
 ```
+
+## Язык интерфейса
+
+Определяется автоматически при запуске по `Locale.preferredLanguages` — **русский**, если это ваш основной язык системы, **английский** во всех остальных случаях. Настройки для переключения нет: поменяйте порядок языков в *Системных настройках → Основные → Язык и регион* и перезапустите виджет.
+
+Бинарник несбандленный, `.lproj` для `NSLocalizedString` взять неоткуда, поэтому обе локали лежат в [Localization.swift](Sources/SSDMonitor/Localization.swift) обычной таблицей строк. Добавить третий язык — это одна ветка там же, остальной код про локали ничего не знает.
 
 ## Автообнаружение диска
 

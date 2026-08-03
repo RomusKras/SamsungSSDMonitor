@@ -23,7 +23,7 @@
 A macOS menu bar widget for monitoring a Samsung SSD 9100 PRO (or any other NVMe drive) connected through a **Thunderbolt/USB4 enclosure**. It shows temperature, wear, TBW and the rest of the SMART telemetry — the things Samsung Magician won't give you, since it has no macOS build at all and the Windows one can't see drives behind USB/TB bridges.
 
 > [!NOTE]
-> The widget's interface is currently Russian-only. Menu labels are quoted below with an English gloss where it matters.
+> The interface follows your system language: Russian if that's your preferred macOS language, English for everyone else. See [Interface language](#interface-language).
 
 ---
 
@@ -120,14 +120,14 @@ Daemon logs: `/tmp/ssdmonitor.out.log`, `/tmp/ssdmonitor.err.log`.
 ### Development loop
 
 ```bash
-# edit Sources/SSDMonitor/main.swift
+# edit Sources/SSDMonitor/main.swift (or Localization.swift for the wording)
 swift build -c release
 launchctl kickstart -k gui/$(id -u)/com.romankrasovskij.ssdmonitor
 ```
 
 ## Refresh interval
 
-Set it right in the widget menu: **«Интервал обновления»** (refresh interval) → 10 s / 30 s / 1 min / 2 min / 5 min, with the active one check-marked. Picking a value:
+Set it right in the widget menu: **Refresh interval** → 10 s / 30 s / 1 min / 2 min / 5 min, with the active one check-marked. Picking a value:
 
 1. restarts the internal timer immediately,
 2. fires a `refresh()` immediately,
@@ -143,6 +143,12 @@ defaults read SSDMonitor refreshInterval
 defaults delete SSDMonitor refreshInterval
 ```
 
+## Interface language
+
+Picked automatically at launch from `Locale.preferredLanguages` — **Russian** if that's your preferred macOS language, **English** for everything else. There's no setting to override it: change the language order in *System Settings → General → Language & Region* and restart the widget.
+
+The binary is unbundled, so there is no `.lproj` for `NSLocalizedString` to read — both languages live in [Localization.swift](Sources/SSDMonitor/Localization.swift) as a plain string table. Adding a third language means adding one branch there; nothing else in the app knows about locales.
+
 ## Drive auto-detection
 
 The `IOService:...` path to the NVMe controller is **never hardcoded** and never cached between refreshes — every timer tick calls `smartctl --scan-open -j` again, walks all the NVMe devices it finds, and takes the first one whose `model_name` contains `samsung` (case-insensitive). Which means:
@@ -156,9 +162,9 @@ The widget survives it without crashing. Blow by blow:
 
 1. Every refresh cycle calls `smartctl --scan-open -j` from scratch — the device path is never cached between ticks (see [Drive auto-detection](#drive-auto-detection)). Pull the drive and it simply drops out of the scan.
 2. `findSamsungReport()` finds no model with `samsung` in the name → `update(with: nil)` → `showError(...)`.
-3. The menu bar icon switches to the warning variant (`externaldrive.trianglebadge.exclamationmark`) and the title goes red — **«нет диска»** (no drive) instead of a temperature.
-4. The menu keeps a **«Последний раз виден: HH:MM:SS»** (last seen) line — the time of the last successful poll, so it's clear the data isn't merely stale, the drive is genuinely gone.
-5. Plug it back in and the next timer tick — or a manual **«Обновить сейчас»** (refresh now) — picks it up again. No restart needed.
+3. The menu bar icon switches to the warning variant (`externaldrive.trianglebadge.exclamationmark`) and the title goes red — **"no drive"** instead of a temperature.
+4. The menu keeps a **"Last seen: HH:MM:SS"** line — the time of the last successful poll, so it's clear the data isn't merely stale, the drive is genuinely gone.
+5. Plug it back in and the next timer tick — or a manual **"Refresh now"** — picks it up again. No restart needed.
 
 Guards against the `smartctl` process itself wedging, in case the drive goes away mid NVMe command:
 
