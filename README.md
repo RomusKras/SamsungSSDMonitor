@@ -8,6 +8,7 @@
 [![Swift](https://img.shields.io/badge/Swift-Toolchain-F05138?style=for-the-badge&logo=swift&logoColor=white)](#build-and-run)
 [![Thunderbolt](https://img.shields.io/badge/Thunderbolt%2FUSB4-40%20Gbps-0A84FF?style=for-the-badge&logo=usb&logoColor=white)](#why-this-works-at-all)
 [![smartmontools](https://img.shields.io/badge/smartctl-no%20sudo-2ECC71?style=for-the-badge)](#requirements)
+[![License](https://img.shields.io/badge/License-MIT-6E7681?style=for-the-badge)](LICENSE)
 
 **English** · [Русский](README.ru.md)
 
@@ -202,3 +203,7 @@ If `smartctl --scan-open` can't find the external drive, the problem isn't this 
 - Under some Accessibility automation tools the status bar item may be reported as belonging to "Control Center". This doesn't affect ordinary mouse clicks in a real session — it only shows up in programmatic UI-driven testing of unsigned processes.
 
 </details>
+
+## License
+
+[MIT](LICENSE) — do whatever you want with it, just keep the copyright notice.

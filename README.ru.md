@@ -8,6 +8,7 @@
 [![Swift](https://img.shields.io/badge/Swift-Toolchain-F05138?style=for-the-badge&logo=swift&logoColor=white)](#сборка-и-запуск)
 [![Thunderbolt](https://img.shields.io/badge/Thunderbolt%2FUSB4-40%20Гбит%2Fс-0A84FF?style=for-the-badge&logo=usb&logoColor=white)](#почему-это-вообще-работает)
 [![smartmontools](https://img.shields.io/badge/smartctl-без%20sudo-2ECC71?style=for-the-badge)](#требования)
+[![License](https://img.shields.io/badge/Лицензия-MIT-6E7681?style=for-the-badge)](LICENSE)
 
 [English](README.md) · **Русский**
 
@@ -199,3 +200,7 @@ diskutil info diskN | grep Protocol   # должно быть "PCI-Express", н�
 - Статус-бар айтем при автоматизации через некоторые Accessibility-инструменты может определяться системой как принадлежащий «Пункт управления» — на обычный клик мышью в реальной сессии это не влияет, проявляется только при программном UI-driven тестировании неподписанных процессов.
 
 </details>
+
+## Лицензия
+
+[MIT](LICENSE) — делайте что угодно, достаточно сохранить копирайт.
