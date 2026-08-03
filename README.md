@@ -2,166 +2,203 @@
 
 # 🧊 SSDMonitor
 
-### SMART-телеметрия Samsung NVMe прямо в строке меню macOS
+### Samsung NVMe SMART telemetry, right in the macOS menu bar
 
-[![macOS](https://img.shields.io/badge/macOS-13%2B-000000?style=for-the-badge&logo=apple&logoColor=white)](#требования)
-[![Swift](https://img.shields.io/badge/Swift-Toolchain-F05138?style=for-the-badge&logo=swift&logoColor=white)](#сборка-и-запуск)
-[![Thunderbolt](https://img.shields.io/badge/Thunderbolt%2FUSB4-40%20Гбит%2Fс-0A84FF?style=for-the-badge&logo=usb&logoColor=white)](#почему-это-вообще-работает)
-[![smartmontools](https://img.shields.io/badge/smartctl-без%20sudo-2ECC71?style=for-the-badge)](#требования)
+[![macOS](https://img.shields.io/badge/macOS-13%2B-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
+[![Swift](https://img.shields.io/badge/Swift-Toolchain-F05138?style=for-the-badge&logo=swift&logoColor=white)](#build-and-run)
+[![Thunderbolt](https://img.shields.io/badge/Thunderbolt%2FUSB4-40%20Gbps-0A84FF?style=for-the-badge&logo=usb&logoColor=white)](#why-this-works-at-all)
+[![smartmontools](https://img.shields.io/badge/smartctl-no%20sudo-2ECC71?style=for-the-badge)](#requirements)
+
+**English** · [Русский](README.ru.md)
 
 <br>
 
-<img src="docs/screenshot.png" width="380" alt="Выпадающее меню SSDMonitor в строке меню macOS с показателями Samsung SSD 9100 PRO">
+<img src="docs/screenshot.png" width="380" alt="SSDMonitor dropdown menu in the macOS menu bar showing Samsung SSD 9100 PRO metrics">
 
 </div>
 
 <br>
 
-Виджет в строке меню macOS для мониторинга Samsung SSD 9100 PRO (или любого другого NVMe-накопителя), подключённого через **Thunderbolt/USB4-кейс**. Показывает температуру, износ, TBW и остальную SMART-телеметрию — то, что не даёт увидеть Samsung Magician (у него вообще нет версии под macOS, а Windows-версия не видит диски за USB/TB-мостами).
+A macOS menu bar widget for monitoring a Samsung SSD 9100 PRO (or any other NVMe drive) connected through a **Thunderbolt/USB4 enclosure**. It shows temperature, wear, TBW and the rest of the SMART telemetry — the things Samsung Magician won't give you, since it has no macOS build at all and the Windows one can't see drives behind USB/TB bridges.
+
+> [!NOTE]
+> The widget's interface is currently Russian-only. Menu labels are quoted below with an English gloss where it matters.
 
 ---
 
-## Почему это вообще работает
+## Why this works at all
 
-Samsung Magician и большинство SMART-тулов не видят диск во внешнем кейсе, потому что типичный USB-кейс — это **мост USB→NVMe с трансляцией протокола** (чипы JMicron/ASMedia/Realtek), который часто не пробрасывает наружу низкоуровневые NVMe-команды.
+Samsung Magician and most SMART tools can't see a drive in an external enclosure, because a typical USB enclosure is a **USB→NVMe bridge that translates the protocol** (JMicron/ASMedia/Realtek chips) and often won't pass low-level NVMe commands through.
 
-Кейс, для которого писался этот виджет, подключён как **Thunderbolt/USB4 (40 Гбит/с)** и **туннелирует настоящий PCIe** — macOS видит диск как обычный `Protocol: PCI-Express` NVMe-девайс (`system_profiler SPNVMeDataType`), без трансляции. Поэтому `smartctl` читает полный SMART/Health Log без всяких обходов и **без sudo**.
+The enclosure this widget was written for connects over **Thunderbolt/USB4 (40 Gbps)** and **tunnels real PCIe** — macOS sees the drive as an ordinary `Protocol: PCI-Express` NVMe device (`system_profiler SPNVMeDataType`), with no translation in the way. That's why `smartctl` reads the full SMART/Health log with no workarounds and **without sudo**.
 
-Если ваш кейс — обычный USB-SATA/USB-NVMe мост (не Thunderbolt/USB4), скорее всего ничего не заработает: `smartctl --scan-open` просто не покажет устройство или покажет его без доступа к SMART-логам.
+If your enclosure is a plain USB-SATA/USB-NVMe bridge rather than Thunderbolt/USB4, odds are nothing will work: `smartctl --scan-open` either won't list the device at all, or will list it with no access to the SMART logs.
 
-## Что показывает
+## What it shows
 
-- Модель, серийный номер, версия прошивки
-- Здоровье / износ (`percentage_used`, порог `available_spare`)
-- Температура (текущая + оба сенсора + пороги warning/critical), подсветка иконки оранжевым/красным при приближении к порогам
-- Записано / прочитано в TB (пересчитано из `data_units_*` по спеке NVMe: 1 unit = 512 000 байт)
-- Наработка в часах и днях, число циклов включения, небезопасных выключений
-- Ошибки носителя и записи в логе ошибок
-- Критические предупреждения (`critical_warning` bitfield)
-- Время последнего обновления
+- Model, serial number, firmware version
+- Health / wear (`percentage_used`, `available_spare` threshold)
+- Temperature (current + both sensors + warning/critical thresholds), with the icon turning orange or red as it approaches them
+- Written / read in TB (derived from `data_units_*` per the NVMe spec: 1 unit = 512,000 bytes)
+- Power-on time in hours and days, power cycle count, unsafe shutdowns
+- Media errors and error log entries
+- Critical warnings (`critical_warning` bitfield)
+- Time of the last refresh
 
-## Чего не может (и не будет) делать
+## What it can't (and won't) do
 
-Требует проприетарных vendor-specific NVMe-команд, которые знает только официальный драйвер Samsung — реверс-инжинирить их я не стал (риск окирпичить диск):
+All of these need proprietary vendor-specific NVMe commands that only Samsung's official driver knows. I didn't reverse-engineer them — too easy to brick the drive:
 
-- Обновление прошивки
+- Firmware updates
 - Secure Erase
 - Over-Provisioning
 - RAPID mode
-- Бенчмарк (в принципе можно добавить отдельно, это не протокольное ограничение — просто не сделано)
+- Benchmarking (this one is perfectly doable as a separate feature — it's not a protocol limitation, just not built)
 
-## Требования
+## Requirements
 
 - macOS 13+
 - Swift toolchain (Xcode Command Line Tools)
 - [smartmontools](https://www.smartmontools.org/) — `brew install smartmontools`
-  - Бинарник ищется по путям `/opt/homebrew/bin/smartctl` и `/usr/local/bin/smartctl`
+  - The binary is looked up at `/opt/homebrew/bin/smartctl` and `/usr/local/bin/smartctl`
 
-## Сборка и запуск
+## Build and run
 
 ```bash
-cd ~/Projects/SamsungSSDMonitor
+git clone https://github.com/RomusKras/SamsungSSDMonitor.git
+cd SamsungSSDMonitor
 swift build -c release
-./.build/release/SSDMonitor        # запуск на переднем плане, для отладки
+./.build/release/SSDMonitor        # foreground run, for debugging
 ```
 
-Виджет — accessory-приложение (`NSApp.setActivationPolicy(.accessory)`): иконки в Dock нет, только в строке меню.
+The widget is an accessory app (`NSApp.setActivationPolicy(.accessory)`): no Dock icon, menu bar only.
 
-## Автозапуск через LaunchAgent
+## Autostart via LaunchAgent
 
-Файл: `~/Library/LaunchAgents/com.romankrasovskij.ssdmonitor.plist`
-Запускает `.build/release/SSDMonitor` при входе в систему и перезапускает при падении (`KeepAlive.SuccessfulExit = false`).
+Run this **from the repo root** — `$PWD` expands so the binary path is filled in for you:
 
 ```bash
-# загрузить/включить автозапуск
+cat > ~/Library/LaunchAgents/com.romankrasovskij.ssdmonitor.plist <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>             <string>com.romankrasovskij.ssdmonitor</string>
+    <key>ProgramArguments</key>  <array><string>$PWD/.build/release/SSDMonitor</string></array>
+    <key>RunAtLoad</key>         <true/>
+    <key>ProcessType</key>       <string>Interactive</string>
+    <key>KeepAlive</key>         <dict><key>SuccessfulExit</key><false/></dict>
+    <key>StandardOutPath</key>   <string>/tmp/ssdmonitor.out.log</string>
+    <key>StandardErrorPath</key> <string>/tmp/ssdmonitor.err.log</string>
+</dict>
+</plist>
+PLIST
+```
+
+`KeepAlive.SuccessfulExit = false` means it restarts on a crash, but stays down when you quit it from the menu yourself.
+
+```bash
+# load / enable autostart
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.romankrasovskij.ssdmonitor.plist
 
-# перезапустить после пересборки (kill + restart одной командой)
+# restart after a rebuild (kill + restart in one command)
 launchctl kickstart -k gui/$(id -u)/com.romankrasovskij.ssdmonitor
 
-# проверить статус (state = running / not running, PID и т.п.)
+# check status (state = running / not running, PID, etc.)
 launchctl print gui/$(id -u)/com.romankrasovskij.ssdmonitor
 
-# полностью выгрузить (отключить автозапуск)
+# unload completely (disable autostart)
 launchctl bootout gui/$(id -u)/com.romankrasovskij.ssdmonitor
 ```
 
-Логи демона: `/tmp/ssdmonitor.out.log`, `/tmp/ssdmonitor.err.log`.
+Daemon logs: `/tmp/ssdmonitor.out.log`, `/tmp/ssdmonitor.err.log`.
 
-**Важно:** после `swift build` бинарник просто перезаписывается по тому же пути — LaunchAgent подхватит новую версию только через `kickstart -k` (или логаут/релогин), сам он не перезапускается при изменении файла.
+> [!IMPORTANT]
+> `swift build` simply overwrites the binary at the same path — the LaunchAgent only picks up the new version after `kickstart -k` (or a logout/login). It will not restart itself when the file changes.
 
-## Что будет, если выдернуть диск
-
-Виджет это переживает без падения. Что именно происходит:
-
-1. Каждый цикл обновления заново вызывает `smartctl --scan-open -j` — путь к устройству нигде не кешируется между тиками (см. «Автообнаружение диска» ниже). Если диск физически отключён, он просто пропадает из списка сканирования.
-2. `findSamsungReport()` не находит модель с `samsung` в названии → `update(with: nil)` → `showError(...)`.
-3. Иконка в строке меню меняется на предупреждающую (`externaldrive.trianglebadge.exclamationmark`), заголовок красным — **«нет диска»**, вместо температуры.
-4. В меню остаётся строка **«Последний раз виден: HH:MM:SS»** — время последнего успешного опроса, чтобы было понятно, что данные не просто зависли, а диска реально нет.
-5. При повторном подключении следующий тик таймера (или ручной «Обновить сейчас») сам подхватывает диск обратно — перезапускать виджет не нужно.
-
-Защита от подвисания самого процесса `smartctl` (на случай отключения ровно посреди NVMe-команды):
-
-- у каждого вызова `smartctl` есть watchdog-таймаут 5 сек (`Smartctl.run(timeout:)`) — если процесс не завершился, он принудительно убивается (`process.terminate()`), и refresh откатывается на «не найден» вместо зависания навсегда;
-- `refresh()` игнорирует новый тик таймера, если предыдущий цикл ещё не завершился (`isRefreshing`-флаг) — исключает накопление зависших фоновых процессов `smartctl`, даже если что-то пошло не так несколько тиков подряд.
-
-**Что НЕ тестировалось физически:** реальное выдёргивание кабеля посреди передачи NVMe-команды. Логика симулировалась через заведомо несуществующий путь `IOService:...` (`smartctl` в этом случае фейлится мгновенно, ~0.03 сек, отдаёт `exit_status: 2` с сообщением `No such file or directory`) — этого достаточно для штатного unplug/переподключения, но не является 100% гарантией для экзотичных гонок на уровне драйвера кейса. Физически дёргать боевой диск не стал: на нём смонтирован рабочий каталог этого же проекта (`/Volumes/Samsung9100Pro/...`), обрыв уронил бы открытые в IDE файлы и текущую shell-сессию.
-
-## Обновление кода — стандартный цикл
+### Development loop
 
 ```bash
-cd ~/Projects/SamsungSSDMonitor
-# отредактировать Sources/SSDMonitor/main.swift
+# edit Sources/SSDMonitor/main.swift
 swift build -c release
 launchctl kickstart -k gui/$(id -u)/com.romankrasovskij.ssdmonitor
 ```
 
-## Настройка интервала обновления
+## Refresh interval
 
-Прямо в меню виджета: **Интервал обновления →** (10 сек / 30 сек / 1 мин / 2 мин / 5 мин), текущий вариант отмечен галочкой. Выбор:
-1. сразу перезапускает внутренний таймер,
-2. сразу запускает `refresh()`,
-3. сохраняется в `UserDefaults` (домен процесса — бинарник без bundle id, поэтому это НЕ `com.romankrasovskij.ssdmonitor`, см. ниже) и переживает перезапуск.
+Set it right in the widget menu: **«Интервал обновления»** (refresh interval) → 10 s / 30 s / 1 min / 2 min / 5 min, with the active one check-marked. Picking a value:
 
-По умолчанию — 30 секунд, пока пользователь ни разу не менял настройку через меню.
+1. restarts the internal timer immediately,
+2. fires a `refresh()` immediately,
+3. persists to `UserDefaults` and survives a restart — under the *process* domain, since the binary has no bundle id, so **not** `com.romankrasovskij.ssdmonitor` (see *Known quirks* below).
+
+The default is 30 seconds, until you change it from the menu at least once.
 
 ```bash
-# посмотреть сохранённый интервал (в секундах), если он уже выставлялся
+# read the stored interval in seconds, if it was ever set
 defaults read SSDMonitor refreshInterval
 
-# сбросить на дефолт (30 сек)
+# reset to the default (30 s)
 defaults delete SSDMonitor refreshInterval
 ```
 
-## Автообнаружение диска
+## Drive auto-detection
 
-Путь `IOService:...` к NVMe-контроллеру **не хардкодится** и не кешируется между обновлениями — при каждом тике таймера заново вызывается `smartctl --scan-open -j`, перебираются все найденные NVMe-устройства, и берётся первое, чей `model_name` содержит `samsung` (без учёта регистра). Это значит:
+The `IOService:...` path to the NVMe controller is **never hardcoded** and never cached between refreshes — every timer tick calls `smartctl --scan-open -j` again, walks all the NVMe devices it finds, and takes the first one whose `model_name` contains `samsung` (case-insensitive). Which means:
 
-- unplug/replug кейса подхватывается автоматически, без перезапуска виджета;
-- если к Маку одновременно подключено несколько Samsung NVMe (например, встроенный SSD Samsung + внешний), возьмётся первый найденный по порядку сканирования — не гарантированно тот, что нужен. Если у вас такая конфигурация, надо будет захардкодить конкретный путь или фильтровать по серийнику в `Smartctl.findSamsungReport()` (`Sources/SSDMonitor/main.swift`).
+- unplug/replug of the enclosure is picked up automatically, with no widget restart;
+- if several Samsung NVMe drives are attached at once (a built-in Samsung SSD plus an external one, say), the first one in scan order wins — not necessarily the one you meant. With that setup you'll want to hardcode a specific path or filter by serial in `Smartctl.findSamsungReport()` ([main.swift](Sources/SSDMonitor/main.swift)).
 
-## Диагностика вручную
+## What happens if you yank the drive
+
+The widget survives it without crashing. Blow by blow:
+
+1. Every refresh cycle calls `smartctl --scan-open -j` from scratch — the device path is never cached between ticks (see [Drive auto-detection](#drive-auto-detection)). Pull the drive and it simply drops out of the scan.
+2. `findSamsungReport()` finds no model with `samsung` in the name → `update(with: nil)` → `showError(...)`.
+3. The menu bar icon switches to the warning variant (`externaldrive.trianglebadge.exclamationmark`) and the title goes red — **«нет диска»** (no drive) instead of a temperature.
+4. The menu keeps a **«Последний раз виден: HH:MM:SS»** (last seen) line — the time of the last successful poll, so it's clear the data isn't merely stale, the drive is genuinely gone.
+5. Plug it back in and the next timer tick — or a manual **«Обновить сейчас»** (refresh now) — picks it up again. No restart needed.
+
+Guards against the `smartctl` process itself wedging, in case the drive goes away mid NVMe command:
+
+- every `smartctl` call carries a 5 s watchdog (`Smartctl.run(timeout:)`) — a process that hasn't exited gets killed (`process.terminate()`) and the refresh falls back to "not found" instead of hanging forever;
+- `refresh()` ignores a new timer tick while the previous cycle is still running (the `isRefreshing` flag) — so wedged background `smartctl` processes can't pile up, even if several ticks in a row go wrong.
+
+> [!WARNING]
+> **Not tested physically:** actually yanking the cable in the middle of an NVMe command. The logic was simulated with a deliberately nonexistent `IOService:...` path (`smartctl` fails instantly there, ~0.03 s, `exit_status: 2`, `No such file or directory`) — enough for ordinary unplug/replug, but not a 100% guarantee against exotic races down in the enclosure's driver. I wasn't willing to yank the live drive: this project's own working directory sits on it (`/Volumes/Samsung9100Pro/...`), so cutting it off would take down the files open in the IDE along with the running shell session.
+
+<details>
+<summary><b>Manual diagnostics</b></summary>
+
+<br>
 
 ```bash
-# список всех видимых NVMe-контроллеров
+# list every visible NVMe controller
 smartctl --scan-open --json
 
-# полный SMART-дамп конкретного устройства (путь из --scan-open)
-smartctl -a -j "IOService:/...путь.../IONVMeBlockStorageDevice@1" -d nvme
+# full SMART dump for one device (path taken from --scan-open)
+smartctl -a -j "IOService:/...path.../IONVMeBlockStorageDevice@1" -d nvme
 
-# быстрая проверка на уровне macOS без smartctl вообще
+# quick check at the macOS level, no smartctl involved
 system_profiler SPNVMeDataType
 
-# убедиться, что кейс туннелирует PCIe, а не транслирует протокол
+# confirm the enclosure tunnels PCIe instead of translating the protocol
 system_profiler SPThunderboltDataType
-diskutil info diskN | grep Protocol   # должно быть "PCI-Express", не "USB"
+diskutil info diskN | grep Protocol   # should say "PCI-Express", not "USB"
 ```
 
-Если `smartctl --scan-open` не находит внешний диск — дело не в этом виджете, а в кейсе/подключении (см. раздел «Почему это вообще работает» выше).
+If `smartctl --scan-open` can't find the external drive, the problem isn't this widget — it's the enclosure or the connection (see [Why this works at all](#why-this-works-at-all)).
 
-## Известные особенности / грабли
+</details>
 
-- **Без sudo не запускается только если** конкретная связка кейс+чип этого требует — для Thunderbolt/USB4-туннеля обычно не требуется (проверено).
-- Приложение **не подписано и не в App Translocation** — Gatekeeper не должен ругаться, т.к. бинарник собран локально, а не скачан.
-- `UserDefaults.standard` у несбандленного бинарника пишет в `~/Library/Preferences/SSDMonitor.plist` (по имени процесса), а не по reverse-DNS id из `Package.swift`/LaunchAgent-label — не путать при отладке через `defaults read`.
-- Статус-бар айтем при автоматизации через некоторые Accessibility-инструменты может определяться системой как принадлежащий "Пункт управления" — на обычный клик мышью в реальной сессии это не влияет, проявляется только при программном UI-driven тестировании неподписанных процессов.
+<details>
+<summary><b>Known quirks and gotchas</b></summary>
+
+<br>
+
+- **sudo is only needed** if your particular enclosure + chip combination demands it — for a Thunderbolt/USB4 tunnel it usually doesn't (verified).
+- The app is **unsigned and not under App Translocation** — Gatekeeper shouldn't complain, since the binary is built locally rather than downloaded.
+- `UserDefaults.standard` in an unbundled binary writes to `~/Library/Preferences/SSDMonitor.plist`, named after the process — not the reverse-DNS id from `Package.swift` or the LaunchAgent label. Easy to mix up when debugging via `defaults read`.
+- Under some Accessibility automation tools the status bar item may be reported as belonging to "Control Center". This doesn't affect ordinary mouse clicks in a real session — it only shows up in programmatic UI-driven testing of unsigned processes.
+
+</details>
